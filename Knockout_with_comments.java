@@ -108,8 +108,8 @@ class Knockout {
             /* If this next part is confusing, then the reader is encouraged to brush up on calculating basic
              expected values. Basically, the expected minimum and maximum expected values of each possible roll are
              aggregated based on the likelihood of that roll occurring. In this case that likelihood can be phrased
-             as the number of ways that that number can be rolled on two dice divided by 36 (the total number of
-             possible permutations. */
+             as the number of ways that that number can be rolled on two dice, divided by 36 (the total number of
+             possible permutations). */
             expectedValues.minEV += lastRolled == -1 ?
                     rollExtremes.minEV * (this.probKey[i] / this.permutations): rollExtremes.minEV;
 
