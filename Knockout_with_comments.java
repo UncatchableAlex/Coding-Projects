@@ -15,7 +15,7 @@ import java.util.*;
  */
 class Knockout {
 
-    private final double[] probKey = {0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1};//probKey[i] = number of permutations of i
+    private final double[] probKey = {0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1};//probKey[i] = number of ways to roll i on two dice
     private final int permutations = 36; //number of possible permutations two dice can make (6 * 6 == 36)
 
     /**
