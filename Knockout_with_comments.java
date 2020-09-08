@@ -14,18 +14,20 @@ import java.util.*;
  * @date 2020-07-19
  */
 class Knockout {
+    //probKey[i] == number of ways to roll i on two dice
+    private final double[] probKey = {0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1};
 
-    private final double[] probKey = {0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1};//probKey[i] == number of ways to roll i on two dice
-    private final int permutations = 36; //number of possible permutations two dice can make (6 * 6 == 36)
+    //number of possible permutations two dice can make (6 * 6 == 36)
+    private final int permutations = 36;
 
     /**
      * The main method can be used to enter queries and interact with the class.
      */
     public static void main(String[] args) {
-        LinkedList<Integer> currState = new LinkedList<>(Arrays.asList(1,2,3,4,9));
+        List<Integer> currState = new LinkedList<>(Arrays.asList(1,2,3,4,9));
         Knockout myGame = new Knockout();
         long start = System.currentTimeMillis();
-        System.out.println(myGame.getExpectedValue(currState, 4) + "\n" + (System.currentTimeMillis() - start));
+        System.out.println(myGame.getExpectedValue(currState, 4) + "\n\n Runtime:" + (System.currentTimeMillis() - start));
     }
 
 
@@ -38,6 +40,31 @@ class Knockout {
      * aimed at either minimizing or maximizing).
      */
     public Result getExpectedValue(List<Integer> currState, int roll){
+        String message = "";
+        if(currState.size() > 9 || currState.isEmpty()){
+            message += currState.isEmpty() ? "You didn't enter any numbers (min size is 1)" :
+                    "You entered too many numbers (max size is 9)";
+        }
+        if(!currState.isEmpty() && Collections.max(currState) > 9){
+            message += (message.length() == 0 ? "T" : " and t") + "he largest number is too large (max is 9)";
+        }
+        if(!currState.isEmpty() && Collections.min(currState) < 1){
+            message += (message.length() == 0 ? "T" : " and t") + "he smallest number is too small (min is 1)";
+        }
+        if(roll > 12){
+            message += (message.length() == 0 ? "T" : " and t") + "he roll is too large (max is 12)";
+        }
+        if(roll < 2){
+            message += (message.length() == 0 ? "T" : " and t") + "he roll is too small (min is 2)";
+        }
+        HashSet<Integer> duplicateChecker = new HashSet<>(currState);
+        if(!currState.isEmpty() && duplicateChecker.size() != currState.size()){
+            message += (message.length() == 0 ? "N" : " and n") + "o duplicates are allowed";
+        }
+        if(message.length() != 0){
+            throw new RuntimeException(message);
+        }
+        Collections.sort(currState);
         return getExpectedValueHelper(currState, roll, false);
     }
 
@@ -114,7 +141,7 @@ class Knockout {
                     rollExtremes.minEV * (this.probKey[i] / this.permutations): rollExtremes.minEV;
 
             expectedValues.maxEV += lastRolled == -1 ?
-                   rollExtremes.maxEV * (this.probKey[i] / this.permutations): rollExtremes.maxEV;
+                    rollExtremes.maxEV * (this.probKey[i] / this.permutations): rollExtremes.maxEV;
 
             //this next part is only relevant for the first layer of depth where the user has provided a specific roll:
             expectedValues.maxRemovals = rollExtremes.maxRemovals;
