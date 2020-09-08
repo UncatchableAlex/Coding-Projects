@@ -141,10 +141,6 @@ class Knockout {
      * removed.
      */
     private List<List<Integer>> getRemovalOptions(List<Integer> currState, int roll, int idx, int depth) {
-        /*I'm not going to comment this bit because how it works is not all that important to the problem as a whole.
-        Feel free to figure it out on your own if you are interested. It isn't especially complicated, but still quite
-        fascinating */
-
         if (roll == 0) {
             return new ArrayList<>(Collections.singletonList(new LinkedList<>()));
         }
