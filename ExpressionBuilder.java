@@ -44,12 +44,7 @@ import java.util.Arrays;
  */
 class ExpressionBuilder {
     //this will hold the Expression evaluated to have the result closest to the target value
-    static Expression closest;
-    //static int target = 4700000;
-    //static Integer[] arr = {37,43,61,79,119,127,197,201};
-    static Integer[] arr = {105,67,92,36,56,28,15};
-    static int target = 455552;
-
+    private Expression closest;
 
     /**
      * This is the main method. This is where the code starts. The code gets evaluated in this order.
@@ -57,19 +52,28 @@ class ExpressionBuilder {
      */
     public static void main(String[] args) {
         //transfer the array of starting integers into an ArrayList.
+        //Integer[] arr = {105,67,92,36,56,28,15};
+        //int target = 455552;
+        Integer[] arr = {1000,2,1000,1000,1000};
+        int target = 2;
         ArrayList<Integer> arrList = new ArrayList<>(Arrays.asList(arr));
+        ExpressionBuilder eb = new ExpressionBuilder();
         //find the answer.
-        Expression bestAnswer = compute(arrList, null);
+        Expression bestAnswer = eb.compute(arrList, target);
         //give a printout based on if bestAnswer evaluates to the target value or if it misses.
         if (bestAnswer != null) {
-            System.out.println(arrayToString(arr) + "  result: " + target + "\n" + "POSSIBLE \n" + bestAnswer);
+            System.out.println(eb.arrayToString(arr) + "  result: " + target + "\n" + "POSSIBLE \n" + bestAnswer);
         } else {
-            System.out.println(arrayToString(arr) + "  result: " + target + "\n" + "IMPOSSIBLE \n" + closest);
+            System.out.println(eb.arrayToString(arr) + "  result: " + target + "\n" + "IMPOSSIBLE \n" + eb.closest);
         }
     }
 
+    public Expression compute(ArrayList<Integer> list, int target){
+        return this.computeHelper(list, target, null);
+    }
+
     /**
-     * Compute(list, prevExp) takes in a list of usable integers and a previously created expression to combine all
+     * ComputeHelper(list, prevExp) takes in a list of usable integers and a previously created expression to combine all
      * possible pairings from the list using all possible operations. New expressions are created from these pairings
      * with the prevExp parameter cited as the previous expression for the new expressions. The updated list and
      * new expressions are used as parameters for compute's recursive calls. When a newly created expression evaluates
@@ -78,29 +82,29 @@ class ExpressionBuilder {
      * @param prevExp The previous expression created.
      * @return The expression which evaluates to the value or null if no such expression exists.
      */
-    private static Expression compute(ArrayList<Integer> list, Expression prevExp) {
+    private Expression computeHelper(ArrayList<Integer> list, int target, Expression prevExp) {
         //the following nested for loop gives all possible pairings between elements in the list.
         for (int i = 0; i < list.size(); i++) {
             for (int j = 0; j < i; j++) {
                 //these are the elements pairings.
-                int A = list.get(i);
-                int B = list.get(j);
+                int first = list.get(i);
+                int second = list.get(j);
                 //clone the list before combining them in different ways.
                 ArrayList<Integer> newList = new ArrayList<>(list);
                 newList.remove(i);
                 newList.remove(j);
                 //make all the possible Expressions.
-                Expression plusExp = new Expression(A, "+", B, prevExp, newList);
-                Expression timesExp = new Expression(A, "*", B, prevExp, newList);
-                Expression minusExp = new Expression(A, "-", B, prevExp, newList);
+                Expression plusExp = new Expression(first, "+", second, prevExp, newList, target, this.closest);
+                Expression timesExp = new Expression(first, "*", second, prevExp, newList, target, this.closest);
+                Expression minusExp = new Expression(first, "-", second, prevExp, newList, target, this.closest);
                 Expression divExp = null;
                 //division is a little more complicated.
                 //we need to make sure that the quotient is an integer and that the denominator isn't zero.
-                if (B != 0 && A % B == 0) {
-                    divExp = new Expression(A, "/", B, prevExp, newList);
+                if (second != 0 && first % second == 0) {
+                    divExp = new Expression(first, "/", second, prevExp, newList, target, this.closest);
                 }
-                else if (A != 0 && B % A == 0) {
-                    divExp = new Expression(B, "/", A, prevExp, newList);
+                else if (first != 0 && second % first == 0) {
+                    divExp = new Expression(second, "/", first, prevExp, newList, target, this.closest);
                 }
                 //if we have reached the target, return the Expression. (base case)
                 if (plusExp.outcome == target) {
@@ -112,26 +116,26 @@ class ExpressionBuilder {
                 if (minusExp.outcome == target) {
                     return minusExp;
                 }
-                if ((((double) A) / B) == target || (((double) B) / A) == target) {
+                if ((((double) first) / second) == target || (((double) second) / first) == target) {
                     return divExp;
                 }
                 //do recursive calls on all new Expressions and their lists. (recursive case)
                 //return any expression that results in a base case
-                Expression plusPath = compute(plusExp.list, plusExp);
+                Expression plusPath = computeHelper(plusExp.list, target, plusExp);
                 if(plusPath != null){
                     return plusPath;
                 }
-                Expression timesPath = compute(timesExp.list, timesExp);
+                Expression timesPath = computeHelper(timesExp.list, target, timesExp);
                 if(timesPath != null){
                     return timesPath;
                 }
-                Expression minusPath = compute(minusExp.list, minusExp);
+                Expression minusPath = computeHelper(minusExp.list, target, minusExp);
                 if(minusPath != null){
                     return minusPath;
                 }
                 Expression divPath = null;
                 if(divExp != null) {
-                    divPath = compute(divExp.list, divExp);
+                    divPath = computeHelper(divExp.list, target, divExp);
                 }
                 if(divPath != null){
                     return divPath;
@@ -146,7 +150,7 @@ class ExpressionBuilder {
      * @param arr the array to be converted
      * @return the array in String form
      */
-    private static String arrayToString(Integer[] arr){
+    private String arrayToString(Integer[] arr){
         String str = "{";
         for(int x : arr){
             str += (x + ", ");
@@ -194,19 +198,19 @@ class Expression {
      * @param prev the previous Expression
      * @param list the list of usable integers to be combined.
      */
-    public Expression(int a, String sym, int b, Expression prev, ArrayList<Integer> list) {
+    public Expression(int a, String sym, int b, Expression prev, ArrayList<Integer> list, int target, Expression closest) {
         this.a = a;
         this.b = b;
         this.sym = sym;
         this.prev = prev;
         //see if this is the closest we have gotten to the target value.
         try {
-            if (Math.abs(this.evaluate() - ExpressionBuilder.target) < Math.abs(ExpressionBuilder.closest.evaluate() - ExpressionBuilder.target)) {
-                ExpressionBuilder.closest = this;
+            if (Math.abs(this.evaluate() - target) < Math.abs(closest.evaluate() - target)) {
+                closest = this;
             }
             //if there isn't a previously closest value, then this expression is closest by default.
         } catch (NullPointerException e) {
-            ExpressionBuilder.closest = this;
+            closest = this;
         }
         //clone the list
         this.list = new ArrayList<>(list);
@@ -245,7 +249,7 @@ class Expression {
                 outcome = this.a / this.b;
                 break;
             default:// this case (hopefully) will never happen. If it does, everything breaks.
-                outcome = Integer.MAX_VALUE;
+                throw new RuntimeException("Something went horribly wrong in the 'evaluate' function.");
         }
         return outcome;
     }
@@ -280,7 +284,7 @@ class Expression {
         Expression curr;
         Expression compareToCurr;
         // for each Expression, match its outcome to the a or b variable in another expression and
-         for(int i = 0; i < expList.size() - 1; i++){
+        for(int i = 0; i < expList.size() - 1; i++){
             curr = expList.get(i);
             for(int j = i + 1; j < expList.size(); j++){
                 compareToCurr = expList.get(j);
